@@ -14,9 +14,31 @@ app.get('/', function(req, res) {
   res.sendFile(process.cwd() + '/views/index.html');
 });
 
-// Your first API endpoint
-app.get('/api/hello', function(req, res) {
-  res.json({ greeting: 'hello API' });
+app.post('/api/shorturl', (req, res) => {
+    let originalUrl = req.body.url;
+
+    const hostname = new URL(originalUrl).hostname;
+
+    dns.lookup(hostname, (err) => {
+        if (err) {
+            return res.json({ error: 'invalid url' });
+        }
+
+        urlDatabase[urlCounter] = originalUrl;
+        res.json({ original_url: originalUrl, short_url: urlCounter });
+        urlCounter++;
+    });
+});
+
+app.get('/api/shorturl/:shorturl', (req, res) => {
+    const shortUrl = req.params.shorturl;
+    const originalUrl = urlDatabase[shortUrl];
+    console.log(shortUrl, originalUrl)
+    if (originalUrl) {
+        res.redirect(originalUrl);
+    } else {
+        res.json({ error: 'No short URL found for given input' });
+    }
 });
 
 app.listen(port, function() {
